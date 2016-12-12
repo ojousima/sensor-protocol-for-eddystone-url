@@ -224,7 +224,7 @@
             6-7: uint16_t    time;            // seconds (now from reset, later maybe from last movement)
             */
             var format = decoded[0];
-            if(1 === format){
+            if(0 === format){
               var humidity = decoded[1] * 0.5;
               //The bytes are swaped during the encoding, thus read byte 3 as first byte, byte 2 as 2nd
               //Same goes for pressure and time
@@ -232,7 +232,7 @@
               var tempSign = (decoded[3] >> 7) & 1;
               var temp = tempSign === 0 ? uTemp/256.0 : -1 * uTemp/256.0;
               var air_pressure = ((decoded[5] << 8) + decoded[4]) + 50000;
-              $("#temperature").text(temp.toFixed(1));
+              $("#temperature").text(Math.round(temp));
               $("#humidity").text(humidity);
               $("#air_pressure").text(air_pressure/100);
           } 
@@ -250,7 +250,7 @@
               var tempSign = (decoded[2] >> 7) & 1;
               var temp = tempSign === 0 ? uTemp/256.0 : -1 * uTemp/256.0;
               var air_pressure = ((decoded[4] << 8) + decoded[5]) + 50000;
-              $("#temperature").text(temp.toFixed(0));
+              $("#temperature").text(Math.round(temp));
               $("#humidity").text(humidity);
               $("#air_pressure").text(air_pressure/100);
           }
