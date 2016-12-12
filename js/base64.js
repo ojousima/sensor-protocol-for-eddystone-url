@@ -1,10 +1,26 @@
 function base64_decode (s)
 {
+  var hasNode = (typeof process !== 'undefined' && process.versions && process.versions.node),
+      hasTypedArray = (typeof Uint8Array !== 'undefined');
+  if (hasNode && require('fs').existsSync(__dirname + '/../build/Release/base91encdec.node')) {
+     module.exports = require(__dirname + '/../build/Release/base91encdec.node');
+     return;
+  }
+
+  console.log("base64 decoding");
+  //An array of the base 64 characters is necessary for encoding, such as:
   var base64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   var base64pad = ".";
+
+  //And decoding will require the inverse list (swap the indices for the values), such as:
+  var base64inv = {}; 
+  for (var i = 0; i < base64chars.length; i++) 
+  { 
+  base64inv[base64chars[i]] = i; 
+  }
   // remove/ignore any characters not in the base64 characters list
   //  or the pad character -- particularly newlines
-  s = s.replace(new RegExp('[^'+base64chars.join("")+'=]', 'g'), "");
+  s = s.replace(new RegExp('[^'+base64chars+'=]', 'g'), "");
 
   // replace any incoming padding with a zero pad (the 'A' character is zero)
   var p = (s.charAt(s.length-1) == 'base64pad' ? 
@@ -24,5 +40,17 @@ function base64_decode (s)
     r += String.fromCharCode((n >>> 16) & 255, (n >>> 8) & 255, n & 255);
   }
    // remove any zero pad that was added to make this a multiple of 24 bits
-  return r.substring(0, r.length - p.length);
+  r = r.substring(0, r.length - p.length);
+  
+  if (hasNode)
+     ret = new Buffer(r);
+  else if (hasTypedArray) {
+    ret = new Uint8Array(r.length);
+    for (i = 0, len = r.length; i < len; ++i){
+      ret[i] = r.charCodeAt(i);
+    }
+  } else
+    ret = r;
+  return ret;
+          
 }

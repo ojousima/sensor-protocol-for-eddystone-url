@@ -245,11 +245,12 @@
           else {
             var decoded = base64_decode(variables);
             console.log(decoded);
-              var uTemp = (((decoded[3] & 127) << 8) | decoded[2]);
-              var tempSign = (decoded[3] >> 7) & 1;
+              var humidity = decoded[1] * 0.5;
+              var uTemp = (((decoded[2] & 127) << 8) | decoded[3]);
+              var tempSign = (decoded[2] >> 7) & 1;
               var temp = tempSign === 0 ? uTemp/256.0 : -1 * uTemp/256.0;
-              var air_pressure = ((decoded[5] << 8) + decoded[4]) + 50000;
-              $("#temperature").text(temp.toFixed(1));
+              var air_pressure = ((decoded[4] << 8) + decoded[5]) + 50000;
+              $("#temperature").text(temp.toFixed(0));
               $("#humidity").text(humidity);
               $("#air_pressure").text(air_pressure/100);
           }
