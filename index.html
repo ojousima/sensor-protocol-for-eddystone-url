@@ -21,6 +21,7 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <script src="http://peterolson.github.com/BigInteger.js/BigInteger.min.js"></script>
+    <script src="./js/base64.js"></script>
     <script>
      /* Base91 - LICENSE: https://raw.githubusercontent.com/mscdex/base91.js/master/LICENSE */
      (function() {
@@ -216,25 +217,42 @@
             console.log(decoded);
 
             /*
-            0:   uint8_t     format;          // (0x01 = realtime sensor readings)
+            0:   uint8_t     format;          // (0x01 = realtime sensor readings in base91)
             1:   uint8_t     humidity;        // one lsb is 0.5%
             2-3: uint16_t    temperature;     // Signed 8.8 fixed-point notation.
             4-5: uint16_t    pressure;        // (-50kPa)
             6-7: uint16_t    time;            // seconds (now from reset, later maybe from last movement)
             */
-            var humidity = decoded[1] * 0.5;
-            //The bytes are swaped during the encoding, thus read byte 3 as first byte, byte 2 as 2nd
-            //Same goes for pressure and time
-            var uTemp = (((decoded[3] & 127) << 8) | decoded[2]);
-            var tempSign = (decoded[3] >> 7) & 1;
-            var temp = tempSign === 0 ? uTemp/256.0 : -1 * uTemp/256.0;
-            var air_pressure = ((decoded[5] << 8) + decoded[4]) + 50000;
-            var time_elapsed = (decoded[7] << 8) + decoded[6];
-            var time_formats = ['seconds', 'minutes', 'hours', 'days'];
-            $("#temperature").text(temp.toFixed(1));
-            $("#humidity").text(humidity);
-            $("#air_pressure").text(air_pressure/100);
-            $("#time_elapsed").text(time_elapsed);
+            var format = decoded[0];
+            if(1 === format){
+              var humidity = decoded[1] * 0.5;
+              //The bytes are swaped during the encoding, thus read byte 3 as first byte, byte 2 as 2nd
+              //Same goes for pressure and time
+              var uTemp = (((decoded[3] & 127) << 8) | decoded[2]);
+              var tempSign = (decoded[3] >> 7) & 1;
+              var temp = tempSign === 0 ? uTemp/256.0 : -1 * uTemp/256.0;
+              var air_pressure = ((decoded[5] << 8) + decoded[4]) + 50000;
+              $("#temperature").text(temp.toFixed(1));
+              $("#humidity").text(humidity);
+              $("#air_pressure").text(air_pressure/100);
+          } 
+            /*
+            0:   uint8_t     format;          // (0x02 = realtime sensor readings in base64)
+            1:   uint8_t     humidity;        // one lsb is 0.5%
+            2-3: uint16_t    temperature;     // Signed 8.8 fixed-point notation.
+            4-5: uint16_t    pressure;        // (-50kPa)
+            */
+          else {
+            var decoded = base64_decode(variables);
+            console.log(decoded);
+              var uTemp = (((decoded[3] & 127) << 8) | decoded[2]);
+              var tempSign = (decoded[3] >> 7) & 1;
+              var temp = tempSign === 0 ? uTemp/256.0 : -1 * uTemp/256.0;
+              var air_pressure = ((decoded[5] << 8) + decoded[4]) + 50000;
+              $("#temperature").text(temp.toFixed(1));
+              $("#humidity").text(humidity);
+              $("#air_pressure").text(air_pressure/100);
+          }
         });
     } else {
         window.location.replace("http://ruuvi.com");
@@ -260,10 +278,6 @@
 				<li class="air-pressure">
 					<div class="measurement"><h3 id="air_pressure"></h3></div>
 					<div class="info"><p>Air pressure<span>hPa</span></p></div>
-				</li>
-				<li class="time">
-					<div class="measurement"><h3 id="time_elapsed"></h3></div>
-					<div class="info"><p>Time elapsed<span class="small">Seconds after<br />last movement</span></p></div>
 				</li>
 			</ul>
 		</div>
